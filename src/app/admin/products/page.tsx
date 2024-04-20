@@ -71,7 +71,7 @@ const ProductsPage = async () => {
 
       <section className="w-full flex items-center justify-between">
         <PageHeader>Products</PageHeader>
-        <Button asChild>
+        <Button asChild variant={'black'}>
           <Link href="/admin/products/new">Add product</Link>
         </Button>
       </section>
@@ -121,7 +121,7 @@ const ProductsPage = async () => {
                     <DropdownMenuItem asChild>
                       <a
                         download
-                        href={`/admin/products/${product.id}/download`}
+                        href={`/api/products/${product.id}/download`}
                       >
                         Download
                       </a>
