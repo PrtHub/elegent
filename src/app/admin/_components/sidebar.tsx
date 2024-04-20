@@ -6,7 +6,7 @@ import { LogOut } from "lucide-react";
 
 const Sidebar = () => {
   return (
-    <section className="w-full h-svh bg-white border-2 flex flex-col items-start justify-start">
+    <section className="w-full h-full bg-white border-2 flex flex-col items-start justify-start">
       <Image
         src="/admin.png"
         alt="admin logo"
