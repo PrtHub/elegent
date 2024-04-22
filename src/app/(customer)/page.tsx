@@ -19,7 +19,7 @@ function getBestSellingProducts() {
   });
 }
 
-async function getNewestProducts() {
+function getNewestProducts() {
   return db.product.findMany({
     where: { isAvailableForPurchase: true },
     orderBy: {
