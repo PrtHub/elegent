@@ -1,12 +1,13 @@
 import db from "@/lib/db";
 import Hero from "./_sections/hero";
 import { Product } from "@prisma/client";
-import ProductCard from "@/components/product-card";
+import ProductCard, { ProductCardSkeleton } from "@/components/product-card";
 import Features from "./_sections/features";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import { Suspense } from "react";
 
 function getBestSellingProducts() {
   return db.product.findMany({
@@ -18,7 +19,7 @@ function getBestSellingProducts() {
   });
 }
 
-function getNewestProducts() {
+async function getNewestProducts() {
   return db.product.findMany({
     where: { isAvailableForPurchase: true },
     orderBy: {
@@ -42,15 +43,16 @@ export default function Home() {
           <article className="space-y-10 text-center sm:text-start">
             <span className="space-y-2">
               <h1 className="text-2xl md:text-2xl font-semibold text-slate-950">
-              Browse Our Fashion Paradise!
+                Browse Our Fashion Paradise!
               </h1>
               <p className="text-gray-600 text-sm tracking-wide sm:max-w-md">
-              Step into a world of style and explore our diverse collection of clothing categories.
+                Step into a world of style and explore our diverse collection of
+                clothing categories.
               </p>
             </span>
             <Button>
               <Link href={"/products"} className="flex items-center">
-              Start Browsing
+                Start Browsing
                 <ArrowRight className="size-4 ml-2" />
               </Link>
             </Button>
@@ -79,7 +81,7 @@ type ProductGridSectionProps = {
   title: string;
 };
 
-async function ProductGridSection({
+function ProductGridSection({
   productsFetcher,
   title,
 }: ProductGridSectionProps) {
@@ -89,10 +91,29 @@ async function ProductGridSection({
         <h1 className="font-semibold text-2xl text-slate-900">{title}</h1>
       </span>
       <section className="w-full grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 md:gap-3 lg:gap-8">
-        {(await productsFetcher()).map((product) => (
-          <ProductCard key={product.id} {...product} />
-        ))}
+        <Suspense
+          fallback={
+            <>
+              <ProductCardSkeleton />
+              <ProductCardSkeleton />
+              <ProductCardSkeleton />
+              <ProductCardSkeleton />
+            </>
+          }
+        >
+          <ProductSuspense productsFetcher={productsFetcher} />
+        </Suspense>
       </section>
     </section>
   );
+}
+
+async function ProductSuspense({
+  productsFetcher,
+}: {
+  productsFetcher: () => Promise<Product[]>;
+}) {
+  return (await productsFetcher()).map((product) => (
+    <ProductCard key={product.id} {...product} />
+  ));
 }
