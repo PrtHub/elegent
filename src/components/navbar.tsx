@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Input } from "@/components/ui/input";
 import MobileMenu from "./mobile-menu";
+import SearchInput from "./search-input";
 
 const Navbar = () => {
   return (
@@ -50,16 +51,8 @@ const Navbar = () => {
 
       <section className="flex items-center gap-x-2">
         <div className="sm:block hidden">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Search Products"
-              className="focus-visible:outline-none focus-visible:ring-0 rounded-md text-slate-500 pl-10 "
-            />
-            <Search className="absolute left-3 top-3 bottom-0 w-4 h-4 text-slate-500 hover:opacity-90 transition" />
-          </div>
+          <SearchInput />
         </div>
-
         <MobileMenu />
       </section>
     </nav>
