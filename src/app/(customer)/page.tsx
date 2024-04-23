@@ -1,33 +1,43 @@
-import db from "@/lib/db";
-import Hero from "./_sections/hero";
+import { Suspense } from "react";
 import { Product } from "@prisma/client";
-import ProductCard, { ProductCardSkeleton } from "@/components/product-card";
-import Features from "./_sections/features";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import Image from "next/image";
-import { Suspense } from "react";
 
-function getBestSellingProducts() {
-  return db.product.findMany({
-    where: { isAvailableForPurchase: true },
-    orderBy: {
-      orders: { _count: "desc" },
-    },
-    take: 4,
-  });
-}
+import db from "@/lib/db";
+import { cache } from "@/lib/cache";
+import Hero from "./_sections/hero";
+import Features from "./_sections/features";
+import { Button } from "@/components/ui/button";
+import ProductCard, { ProductCardSkeleton } from "@/components/product-card";
 
-function getNewestProducts() {
-  return db.product.findMany({
-    where: { isAvailableForPurchase: true },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 4,
-  });
-}
+const getBestSellingProducts = cache(
+  () => {
+    return db.product.findMany({
+      where: { isAvailableForPurchase: true },
+      orderBy: {
+        orders: { _count: "desc" },
+      },
+      take: 4,
+    });
+  },
+  ["/", "getMostPopularProducts"],
+  { revalidate: 60 * 60 * 24 }
+);
+
+const getNewestProducts = cache(
+  () => {
+    return db.product.findMany({
+      where: { isAvailableForPurchase: true },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 4,
+    });
+  },
+  ["/", "getNewestProducts"],
+  { revalidate: 60 * 60 * 24 }
+);
 
 export default function Home() {
   return (

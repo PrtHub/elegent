@@ -1,4 +1,6 @@
 import db from "@/lib/db";
+import { cache } from "@/lib/cache";
+
 import Categories from "./_components/categories";
 import ProductList from "@/components/products-list";
 import SearchInput from "@/components/search-input";
@@ -6,7 +8,7 @@ import SearchInput from "@/components/search-input";
 interface GetCourses {
   name?: string;
   categoryId?: string;
-};
+}
 
 interface SearchParamsProps {
   searchParams: {
@@ -15,21 +17,25 @@ interface SearchParamsProps {
   };
 }
 
-const getProducts = ({ name, categoryId }: GetCourses) => {
-  return db.product.findMany({
-    where: {
-      isAvailableForPurchase: true,
-      name: {
-        contains: name,
+const getProducts = cache(
+  ({ name, categoryId }: GetCourses) => {
+    return db.product.findMany({
+      where: {
+        isAvailableForPurchase: true,
+        name: {
+          contains: name,
+        },
+        categoryId,
       },
-      categoryId,
-    },
-    orderBy: { name: "asc" },
-    include: {
-      category: true,
-    },
-  });
-};
+      orderBy: { name: "asc" },
+      include: {
+        category: true,
+      },
+    });
+  },
+  ["/products", "getProducts"],
+  { revalidate: 60 * 60 * 24 }
+);
 
 async function ProductsPage({ searchParams }: SearchParamsProps) {
   const categories = await db.category.findMany({
