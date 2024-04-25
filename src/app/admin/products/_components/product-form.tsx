@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatCurrency } from "@/lib/formatter";
-import { addProducts, updateProducts } from "../../_actions/add-products";
+import { addProducts, updateProducts } from "../../_actions/products";
 
 import {
   Select,

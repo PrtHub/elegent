@@ -4,7 +4,6 @@ import { IconBadge } from "@/components/icon-badge";
 import { cn } from "@/lib/utils";
 import {
   BadgeDollarSign,
-  BaggageClaim,
   LayoutDashboard,
   Store,
   Users,
@@ -27,11 +26,6 @@ const routes = [
     icon: Users,
     label: "Customers",
     path: "/admin/customers",
-  },
-  {
-    icon: BaggageClaim,
-    label: "Orders",
-    path: "/admin/orders",
   },
   {
     icon: BadgeDollarSign,
