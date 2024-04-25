@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
         from: `Support <${process.env.SENDER_EMAIL}>`,
         to: email,
         subject: "Order Confirmation",
-        react: true
+        react: '<div>Hello world</div>'
     })
   }
 
