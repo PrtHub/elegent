@@ -2,7 +2,7 @@ import db from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 
-async function GET(
+export async function GET(
   req: NextRequest,
   {
     params: { downloadVerificationId },

@@ -57,7 +57,6 @@ const ProductIdPage = async ({ params }: { params: { productId: string } }) => {
             {product && product.priceInCents
               ? formatCurrency(product.priceInCents / 100)
               : "NaN"}
-            .00
           </span>
           <Button className="bg-slate-900 mt-2" asChild>
             <Link href={`/products/${params.productId}/purchase`}>
