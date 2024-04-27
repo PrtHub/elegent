@@ -19,7 +19,7 @@ const MobileMenu = () => {
         <SheetContent className="flex flex-col py-10 px-10">
           <Link href="/">Home</Link>
           <Link href="/products">Products</Link>
-          <Link href="/my-orders">My Orders</Link>
+          <Link href="/orders">My Orders</Link>
         </SheetContent>
       </Sheet>
     </section>

@@ -40,7 +40,7 @@ const Navbar = () => {
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link href="/my-orders" legacyBehavior passHref>
+            <Link href="/orders" legacyBehavior passHref>
               <NavigationMenuLink className="text-slate-500 text-sm font-medium">
                 My Orders
               </NavigationMenuLink>
