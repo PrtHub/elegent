@@ -7,8 +7,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url  	    = env("DATABASE_URL")
 }
 
 model Product {
@@ -26,6 +26,7 @@ model Product {
   downloadVerifications  DownloadVerification[]
   createdAt              DateTime               @default(now())
   updatedAt              DateTime               @updatedAt
+  discountCodes          DiscountCode[]
 
   @@index([categoryId])
   @@index([name])
@@ -46,14 +47,16 @@ model Category {
 }
 
 model Order {
-  id               String   @id @default(uuid())
+  id               String        @id @default(uuid())
   pricePaidInCents Int
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
   userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId        String
-  product          Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  product          Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  discountCodeId   String?
+  discountCode     DiscountCode? @relation(fields: [discountCodeId], references: [id], onDelete: Restrict)
 }
 
 model DownloadVerification {
@@ -62,4 +65,25 @@ model DownloadVerification {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model DiscountCode {
+  id             String           @id @default(uuid())
+  code           String           @unique
+  discountAmount Int
+  discountType   DiscountCodeType
+  uses           Int              @default(0)
+  isActive       Boolean          @default(true)
+  allProducts    Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  limit          Int?
+  expiresAt      DateTime?
+
+  products Product[]
+  orders   Order[]
+}
+
+enum DiscountCodeType {
+  PERCENTAGE
+  FIXED
 }
