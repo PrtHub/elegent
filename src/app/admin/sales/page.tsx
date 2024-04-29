@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MoreVertical } from "lucide-react";
+import { Minus, MoreVertical } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/formatter";
 import {
   DropdownMenu,
@@ -34,6 +34,7 @@ function getSales() {
       pricePaidInCents: true,
       product: { select: { name: true } },
       user: { select: { email: true } },
+      discountCode: { select: { code: true } },
     },
     orderBy: {
       createdAt: "desc",
@@ -42,7 +43,7 @@ function getSales() {
 }
 
 const SalesPage = async () => {
-  const sales = await getSales()
+  const sales = await getSales();
   return (
     <section className="pt-20 px-4 md:p-6 w-full h-svh flex flex-col items-start justify-start gap-y-10">
       <div className="w-full flex items-start justify-start">
@@ -77,6 +78,7 @@ const SalesPage = async () => {
             <TableHead>Product</TableHead>
             <TableHead>User</TableHead>
             <TableHead>Value</TableHead>
+            <TableHead>Coupon</TableHead>
             <TableHead className="w-0">
               <span className="sr-only">Actions</span>
             </TableHead>
@@ -88,7 +90,10 @@ const SalesPage = async () => {
               <TableCell>{sale.product.name}</TableCell>
               <TableCell>{sale.user.email}</TableCell>
               <TableCell>
-              {formatCurrency(sale.pricePaidInCents / 100)}
+                {formatCurrency(sale.pricePaidInCents / 100)}
+              </TableCell>
+              <TableCell>
+                {sale.discountCode == null ? <Minus /> : sale.discountCode.code}
               </TableCell>
               <TableCell className="text-center">
                 <DropdownMenu>
