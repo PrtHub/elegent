@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { userOrderExists } from "@/app/actions/orders"
-import { Button } from "@/components/ui/button"
+import { userOrderExists } from "@/app/actions/orders";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,39 +9,61 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { formatCurrency } from "@/lib/formatter"
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { getDiscountedAmount } from "@/lib/coupons-helper";
+import { formatCurrency, formatDiscountCode } from "@/lib/formatter";
+import { cn } from "@/lib/utils";
+import { DiscountCodeType } from "@prisma/client";
 import {
   Elements,
   LinkAuthenticationElement,
   PaymentElement,
   useElements,
   useStripe,
-} from "@stripe/react-stripe-js"
-import { loadStripe } from "@stripe/stripe-js"
-import Image from "next/image"
-import { FormEvent, useState } from "react"
+} from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useRef, useState } from "react";
 
 type CheckoutFormProps = {
   product: {
-    id: string
-    imagePath: string
-    name: string
-    priceInCents: number
-    description: string
-  }
-  clientSecret: string
-}
+    id: string;
+    imagePath: string;
+    name: string;
+    priceInCents: number;
+    description: string;
+  };
+  discountCode?: {
+    id: string;
+    discountAmount: number;
+    discountType: DiscountCodeType;
+  };
+  clientSecret: string;
+};
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY as string
-)
+);
 
-export function CheckoutForm({ product, clientSecret }: CheckoutFormProps) {
+export function CheckoutForm({
+  product,
+  clientSecret,
+  discountCode,
+}: CheckoutFormProps) {
+  const amount =
+    discountCode == null
+      ? product.priceInCents
+      : getDiscountedAmount(discountCode, product.priceInCents);
+
+  const isDiscounted = amount != product.priceInCents;
+
   return (
     <section className="max-w-5xl w-full mx-auto space-y-10 mt-10">
       <section className="flex gap-4 items-center">
-      <Card className="bg-gray-50 w-[320px] sm:w-fit">
+        <Card className="bg-gray-50 w-[320px] sm:w-fit">
           <Image
             src={product.imagePath}
             alt={product?.name || ""}
@@ -51,9 +73,22 @@ export function CheckoutForm({ product, clientSecret }: CheckoutFormProps) {
           />
         </Card>
         <article className="flex flex-col items-start justify-start gap-y-4">
-          <span className="text-xl font-bold">
-            {formatCurrency(product.priceInCents / 100)}
-          </span>
+          <div className="flex gap-3 items-center">
+            <span
+              className={cn(
+                isDiscounted
+                  ? "text-sm line-through text-muted-foreground"
+                  : "text-2xl font-bold"
+              )}
+            >
+              {formatCurrency(product.priceInCents / 100)}
+            </span>
+            {isDiscounted && (
+              <span className="text-xl font-bold">
+                {formatCurrency(amount / 100)}
+              </span>
+            )}
+          </div>
           <h1 className="text-2xl font-bold">{product.name}</h1>
           <div className="line-clamp-2 max-w-md text-muted-foreground ">
             {product.description}
@@ -61,40 +96,56 @@ export function CheckoutForm({ product, clientSecret }: CheckoutFormProps) {
         </article>
       </section>
       <Elements options={{ clientSecret }} stripe={stripePromise}>
-        <Form priceInCents={product.priceInCents} productId={product.id} />
+        <Form
+          priceInCents={product.priceInCents}
+          productId={product.id}
+          discountCode={discountCode}
+        />
       </Elements>
     </section>
-  )
+  );
 }
 
 function Form({
   priceInCents,
   productId,
+  discountCode,
 }: {
-  priceInCents: number
-  productId: string
+  priceInCents: number;
+  productId: string;
+  discountCode?: {
+    id: string;
+    discountAmount: number;
+    discountType: DiscountCodeType;
+  };
 }) {
-  const stripe = useStripe()
-  const elements = useElements()
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string>()
-  const [email, setEmail] = useState<string>()
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>();
+  const [email, setEmail] = useState<string>();
+  const discountCodeRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const coupon = searchParams.get("coupon");
 
   async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (stripe == null || elements == null || email == null) return
+    if (stripe == null || elements == null || email == null) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
 
-    const orderExists = await userOrderExists(email, productId)
+    const orderExists = await userOrderExists(email, productId);
 
     if (orderExists) {
       setErrorMessage(
         "You have already purchased this product. Try downloading it from the My Orders page"
-      )
-      setIsLoading(false)
-      return
+      );
+      setIsLoading(false);
+      return;
     }
 
     stripe
@@ -106,12 +157,12 @@ function Form({
       })
       .then(({ error }) => {
         if (error.type === "card_error" || error.type === "validation_error") {
-          setErrorMessage(error.message)
+          setErrorMessage(error.message);
         } else {
-          setErrorMessage("An unknown error occurred")
+          setErrorMessage("An unknown error occurred");
         }
       })
-      .finally(() => setIsLoading(false))
+      .finally(() => setIsLoading(false));
   }
 
   return (
@@ -119,24 +170,56 @@ function Form({
       <Card>
         <CardHeader>
           <CardTitle>Checkout</CardTitle>
-          {errorMessage && (
-            <CardDescription className="text-destructive">
-              {errorMessage}
-            </CardDescription>
-          )}
+
+          <CardDescription className="text-destructive">
+            {errorMessage && <span>{errorMessage}</span>}
+            {coupon != null && discountCode == null && (
+              <span>Invalid discount code</span>
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <PaymentElement />
           <div className="mt-4">
             <LinkAuthenticationElement
-              onChange={e => setEmail(e.value.email)}
+              onChange={(e) => setEmail(e.value.email)}
             />
+          </div>
+          <div className="space-y-2  mt-4">
+            <Label htmlFor="discountCode">Coupon</Label>
+            <div className="flex items-center gap-4">
+              <Input
+                type="text"
+                id="discountCode"
+                name="discountCode"
+                className="max-w-xs w-full"
+                defaultValue={coupon || ""}
+                ref={discountCodeRef}
+              />
+              <Button
+                type="button"
+                variant="black"
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.set("coupon", discountCodeRef.current?.value || "");
+                  router.push(`${pathname}?${params.toString()}`);
+                }}
+              >
+                Apply
+              </Button>
+              {discountCode != null && (
+                <span className="text-muted-foreground">
+                  {formatDiscountCode(discountCode)} discount
+                </span>
+              )}
+            </div>
           </div>
         </CardContent>
         <CardFooter>
           <Button
             className="w-full"
             size="lg"
+            variant={"black"}
             disabled={stripe == null || elements == null || isLoading}
           >
             {isLoading
@@ -146,5 +229,5 @@ function Form({
         </CardFooter>
       </Card>
     </form>
-  )
+  );
 }
