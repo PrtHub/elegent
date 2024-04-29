@@ -1,6 +1,6 @@
 "use client";
 
-import { userOrderExists } from "@/app/actions/orders";
+import { createPaymentIntent } from "@/app/(customer)/_actions/payment";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -41,18 +41,13 @@ type CheckoutFormProps = {
     discountAmount: number;
     discountType: DiscountCodeType;
   };
-  clientSecret: string;
 };
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY as string
 );
 
-export function CheckoutForm({
-  product,
-  clientSecret,
-  discountCode,
-}: CheckoutFormProps) {
+export function CheckoutForm({ product, discountCode }: CheckoutFormProps) {
   const amount =
     discountCode == null
       ? product.priceInCents
@@ -95,9 +90,12 @@ export function CheckoutForm({
           </div>
         </article>
       </section>
-      <Elements options={{ clientSecret }} stripe={stripePromise}>
+      <Elements
+        options={{ amount, mode: "payment", currency: "usd" }}
+        stripe={stripePromise}
+      >
         <Form
-          priceInCents={product.priceInCents}
+          amount={amount}
           productId={product.id}
           discountCode={discountCode}
         />
@@ -107,11 +105,11 @@ export function CheckoutForm({
 }
 
 function Form({
-  priceInCents,
+  amount,
   productId,
   discountCode,
 }: {
-  priceInCents: number;
+  amount: number;
   productId: string;
   discountCode?: {
     id: string;
@@ -137,13 +135,20 @@ function Form({
     if (stripe == null || elements == null || email == null) return;
 
     setIsLoading(true);
+    const formSubmit = await elements.submit();
+    if (formSubmit.error != null) {
+      setErrorMessage(formSubmit.error.message);
+      setIsLoading(false);
+      return;
+    }
 
-    const orderExists = await userOrderExists(email, productId);
-
-    if (orderExists) {
-      setErrorMessage(
-        "You have already purchased this product. Try downloading it from the My Orders page"
-      );
+    const paymentIntent = await createPaymentIntent(
+      email,
+      productId,
+      discountCode?.id
+    );
+    if (paymentIntent.error != null) {
+      setErrorMessage(paymentIntent.error);
       setIsLoading(false);
       return;
     }
@@ -151,6 +156,7 @@ function Form({
     stripe
       .confirmPayment({
         elements,
+        clientSecret: paymentIntent.clientSecret,
         confirmParams: {
           return_url: `${process.env.NEXT_PUBLIC_SERVER_URL}/stripe/${productId}/purchase-success`,
         },
@@ -224,7 +230,7 @@ function Form({
           >
             {isLoading
               ? "Purchasing..."
-              : `Purchase - ${formatCurrency(priceInCents / 100)}`}
+              : `Purchase - ${formatCurrency(amount / 100)}`}
           </Button>
         </CardFooter>
       </Card>

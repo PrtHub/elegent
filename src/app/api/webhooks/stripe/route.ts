@@ -3,7 +3,6 @@ import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import PurchaseReceipt from "@/email/purchase-receipt";
-import * as React from 'react';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const resend = new Resend(process.env.RESEND_SECRET_KEY as string);
@@ -18,6 +17,7 @@ export async function POST(req: NextRequest) {
   if (event.type === "charge.succeeded") {
     const charge = event.data.object;
     const productId = charge.metadata.productId;
+    const discountCodeId = charge.metadata.discountCodeId;
     const email = charge.billing_details.email;
     const pricePaidInCents = charge.amount;
 
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
     const userFields = {
       email,
-      orders: { create: { productId, pricePaidInCents } },
+      orders: { create: { productId, pricePaidInCents, discountCodeId } },
     };
     const {
       orders: [order],
@@ -46,24 +46,31 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const downloadVerification = await db.downloadVerification.create(
-        {
-            data: {
-                productId,
-                expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
-            }
-        }
-    )
+    const downloadVerification = await db.downloadVerification.create({
+      data: {
+        productId,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      },
+    });
 
-    const downloadVerificationId = downloadVerification.id
+    if (discountCodeId != null) {
+      await db.discountCode.update({
+        where: { id: discountCodeId },
+        data: {
+          uses: { increment: 1 },
+        },
+      });
+    }
+
+    const downloadVerificationId = downloadVerification.id;
 
     await resend.emails.send({
-        from: `Support <${process.env.SENDER_EMAIL}>`,
-        to: email,
-        subject: "Order Confirmation",
-        react: PurchaseReceipt({order, product, downloadVerificationId})
-    })
+      from: `Support <${process.env.SENDER_EMAIL}>`,
+      to: email,
+      subject: "Order Confirmation",
+      react: PurchaseReceipt({ order, product, downloadVerificationId }),
+    });
   }
 
-  return new NextResponse()
+  return new NextResponse();
 }
