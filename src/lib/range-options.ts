@@ -1,4 +1,5 @@
-import { startOfDay, subDays } from "date-fns";
+import { isValid, startOfDay, subDays } from "date-fns";
+import { formatDate } from "./formatter";
 
 export const RANGE_OPTIONS = {
   last_7_days: {
@@ -28,7 +29,18 @@ export const RANGE_OPTIONS = {
   },
 };
 
-export function getRangeOptions(range?: string) {
-  if (range == null) return;
+export function getRangeOptions(range?: string, from?: string, to?: string) {
+  if (range == null) {
+    const startDate = new Date(from || "");
+    const endDate = new Date(to || "");
+
+    if (!isValid(startDate) || !isValid(endDate)) return;
+
+    return {
+      label: `${formatDate(startDate)} - ${formatDate(endDate)}`,
+      startDate,
+      endDate,
+    };
+  }
   return RANGE_OPTIONS[range as keyof typeof RANGE_OPTIONS];
 }

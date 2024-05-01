@@ -160,20 +160,39 @@ async function getProductData(
 }
 
 const AdminPage = async ({
-  searchParams: { totalSales, totalCustomers, totalRevenue },
+  searchParams: {
+    totalSales,
+    totalSalesFrom,
+    totalSalesTo,
+    totalCustomers,
+    totalCustomersFrom,
+    totalCustomersTo,
+    totalRevenue,
+    totalRevenueFrom,
+    totalRevenueTo,
+  },
 }: {
   searchParams: {
     totalSales: string;
+    totalSalesFrom: string;
+    totalSalesTo: string;
     totalCustomers: string;
+    totalCustomersFrom: string;
+    totalCustomersTo: string;
     totalRevenue: string;
+    totalRevenueFrom: string;
+    totalRevenueTo: string;
   };
 }) => {
   const totalSalesRangeOption =
-    getRangeOptions(totalSales) || RANGE_OPTIONS.last_7_days;
+    getRangeOptions(totalSales, totalSalesFrom, totalSalesTo) ||
+    RANGE_OPTIONS.last_7_days;
   const totalCustomersRangeOption =
-    getRangeOptions(totalCustomers) || RANGE_OPTIONS.last_7_days;
+    getRangeOptions(totalCustomers, totalCustomersFrom, totalCustomersTo) ||
+    RANGE_OPTIONS.last_7_days;
   const totalRevenueRangeOption =
-    getRangeOptions(totalRevenue) || RANGE_OPTIONS.last_7_days;
+    getRangeOptions(totalRevenue, totalRevenueFrom, totalRevenueTo) ||
+    RANGE_OPTIONS.last_7_days;
 
   const [salesData, userData, productData] = await Promise.all([
     getSalesData(
