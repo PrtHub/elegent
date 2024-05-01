@@ -43,3 +43,11 @@ const DATE_TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
 export function formatDateTime(date: Date) {
     return DATE_TIME_FORMAT.format(date)
 }
+
+const DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+});
+
+export function formatDate(date: Date) {
+    return DATE_FORMAT.format(date)
+}
