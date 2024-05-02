@@ -120,7 +120,7 @@ async function getUserData(
 
   return {
     chartData: chartData.reduce((data, user) => {
-      const formattedDate = formatDate(user.createdAt);
+      const formattedDate = format(user.createdAt);
       const entry = dayArray.find((day) => day.date === formattedDate);
       if (entry == null) return data;
       entry.totalUsers += 1;
