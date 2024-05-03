@@ -47,13 +47,13 @@ async function ProductsPage({ searchParams }: SearchParamsProps) {
   const products = await getProducts({ ...searchParams });
 
   return (
-    <section className="w-full flex flex-col gap-y-8 sm:gap-y-12 mt-10 px-3 max-w-6xl mx-auto">
-      <section className="sm:hidden block">
-        <SearchInput />
+      <section className="w-full flex flex-col gap-y-8 sm:gap-y-12 mt-10 px-3 max-w-6xl mx-auto">
+        <section className="sm:hidden block">
+          <SearchInput />
+        </section>
+        <Categories items={categories} />
+        <ProductList products={products} />
       </section>
-      <Categories items={categories} />
-      <ProductList products={products} />
-    </section>
   );
 }
 
