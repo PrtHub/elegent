@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatter";
 import Link from "next/link";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 type ProductCardProps = {
   id: string;
@@ -37,7 +38,7 @@ const ProductCard = ({
             {name}
           </h1>
           <span className="flex justify-between items-center text-slate-600 ">
-            <p className="uppercase text-xs lg:text-sm">
+            <p className={cn("uppercase text-xs lg:text-sm", !isAvailableForPurchase && 'text-destructive')}>
               {isAvailableForPurchase ? "In stock" : "Out of stock"}
             </p>
             <p className="text-sm">{formatCurrency(priceInCents / 100)}</p>

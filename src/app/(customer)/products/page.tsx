@@ -4,6 +4,7 @@ import { cache } from "@/lib/cache";
 import Categories from "./_components/categories";
 import ProductList from "@/components/products-list";
 import SearchInput from "@/components/search-input";
+import { Suspense } from "react";
 
 interface GetCourses {
   name?: string;
@@ -47,6 +48,7 @@ async function ProductsPage({ searchParams }: SearchParamsProps) {
   const products = await getProducts({ ...searchParams });
 
   return (
+    <Suspense>
       <section className="w-full flex flex-col gap-y-8 sm:gap-y-12 mt-10 px-3 max-w-6xl mx-auto">
         <section className="sm:hidden block">
           <SearchInput />
@@ -54,6 +56,7 @@ async function ProductsPage({ searchParams }: SearchParamsProps) {
         <Categories items={categories} />
         <ProductList products={products} />
       </section>
+    </Suspense>
   );
 }
 

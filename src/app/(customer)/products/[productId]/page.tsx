@@ -19,6 +19,7 @@ const ProductIdPage = async ({ params }: { params: { productId: string } }) => {
 
   const similarProducts = await db.product.findMany({
     where: {
+      isAvailableForPurchase: true,
       categoryId: product?.categoryId,
       id: {
         not: params.productId,
